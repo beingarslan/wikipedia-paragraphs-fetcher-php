@@ -57,6 +57,7 @@
                         type: 'POST',
                         data: $(form).serialize(),
                         success: function(response) {
+                            console.log(response);
                             if (!response.response) {
                                 $('#msg').html('<div class="alert alert-danger" role="alert">' + response.error + '</div>');
                             } else {
@@ -64,7 +65,13 @@
 
                                 $('#title').html(response.title);
                                 $('#paragraph').html(response.paragraph);
-                                $('#images').html(response.images ? response.images : 'No images found');
+                                var images = response.images;
+                                var html = '';
+                                for (var i = 0; i < images.length; i++) {
+                                    // image with download option
+                                    html += '<a href="' + images[i] + '" download target="_blank"><img src="' + images[i] + '" class="img-fluid" style="width: 200px; height: 200px;"></a>';
+                                }
+                                $('#images').html(html);
                             }
                         },
                         error: function(error) {

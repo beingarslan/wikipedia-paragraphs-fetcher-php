@@ -20,25 +20,32 @@ try {
 
     // Fetch the first paragraph of the article and the title using the Wikipedia API
     $page_name = substr($url, strrpos($url, '/') + 1);
-    $api_url = "https://en.wikipedia.org/api/rest_v1/page/summary/$page_name";
+    // extractLanguageCode form url
+    $languageCode = substr($url, 8, 2);
+    // get page content
+    $api_url_media = "https://$languageCode.wikipedia.org/api/rest_v1/page/media-list/$page_name";
+    $api_url = "https://$languageCode.wikipedia.org/api/rest_v1/page/summary/$page_name";
+    $data_media = file_get_contents($api_url_media);
+    $json_media = json_decode($data_media, true);
     $data = file_get_contents($api_url);
     $json = json_decode($data, true);
+    // echo json_encode($json);
 
     $title = $json['title'];
     $paragraph = $json['extract'];
 
     // Download the images and get their paths
     $images = array();
-    if (is_array($json['thumbnail']['source'])) {
-        foreach ($json['thumbnail']['source'] as $image_url) {
-            // Generate a unique file name for the image
-            $image_path = uniqid() . ".jpg";
-
-            // Download the image and save it to the server
-            file_put_contents($image_path, file_get_contents($image_url));
-
-            // Add the image path to the array
-            $images[] = $image_path;
+    if (is_array($json_media['items'])) {
+        $i = 0;
+        foreach ($json_media['items'] as $item) {
+            if ($item['type'] == 'image') {
+                if ($i++ >= 3) {
+                    break;
+                }
+                $image_url = 'https:' . $item['srcset'][0]['src'];
+                $images[] = $image_url;
+            }
         }
     }
 
@@ -46,13 +53,11 @@ try {
     $title = mysqli_real_escape_string($conn, $title);
     $paragraph = mysqli_real_escape_string($conn, $paragraph);
     $url = mysqli_real_escape_string($conn, $url);
-    $images = mysqli_real_escape_string($conn, implode(",", $images));
+    $images_store = mysqli_real_escape_string($conn, implode(",", $images));
 
     // Insert the article data into the database
-    $sql = "INSERT INTO articles (title, paragraph, url, images) VALUES ('$title', '$paragraph', '$url', '$images')";
+    $sql = "INSERT INTO articles (title, paragraph, url, images) VALUES ('$title', '$paragraph', '$url', '$images_store')";
 
-    $data = array();
-    $data = $json;
 
     if (mysqli_query($conn, $sql)) {
         $response = array(
