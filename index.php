@@ -52,6 +52,11 @@
                     }
                 },
                 submitHandler: function(form) {
+                    // disable submit button
+                    $('button[type="submit"]').attr('disabled', true);
+                    $('#title').html('');
+                    $('#paragraph').html('');
+                    $('#images').html('');
                     $.ajax({
                         url: 'fetchData.php',
                         type: 'POST',
@@ -72,11 +77,15 @@
                                     html += '<a href="' + images[i] + '" download target="_blank"><img src="' + images[i] + '" class="img-fluid" style="width: 200px; height: 200px;"></a>';
                                 }
                                 $('#images').html(html);
+                                // enable submit button
                             }
+                            $('button[type="submit"]').attr('disabled', false);
                         },
                         error: function(error) {
                             console.log(error);
                             $('#msg').html('<div class="alert alert-danger" role="alert">Something went wrong</div>');
+                            $('button[type="submit"]').attr('disabled', false);
+
                         }
                     });
                 }
