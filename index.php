@@ -57,6 +57,7 @@
                     $('#title').html('');
                     $('#paragraph').html('');
                     $('#images').html('');
+                    $('#msg').html('');
                     $.ajax({
                         url: 'fetchData.php',
                         type: 'POST',
