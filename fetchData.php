@@ -62,8 +62,8 @@ try {
     if (mysqli_query($conn, $sql)) {
         $response = array(
             "success" => "Article added successfully.",
-            "title" => $title,
-            "paragraph" => $paragraph,
+            "title" => strip_tags($title),
+            "paragraph" => strip_tags($paragraph),
             "url" => $url,
             "images" => $images,
             "response" => true
