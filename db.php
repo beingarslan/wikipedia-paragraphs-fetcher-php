@@ -1,4 +1,4 @@
-<?php  
+<?php
 
 $host = "127.0.0.1";
 $user = "root";
@@ -7,5 +7,7 @@ $dbname = "wikipedia-paragraphs-fetcher";
 
 $conn = mysqli_connect($host, $user, $password, $dbname);
 if (!$conn) {
-die("Connection failed: " . mysqli_connect_error());
+    die("Connection failed: " . mysqli_connect_error());
 }
+
+mysqli_set_charset($link, "utf8mb4");
