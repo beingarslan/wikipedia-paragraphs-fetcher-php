@@ -1,8 +1,8 @@
 <?php
 
-$host = "menu-app-db-do-user-12682515-0.b.db.ondigitalocean.com:25060";
-$user = "doadmin";
-$password = "AVNS_QtWQVwd3swI-_-D_-Ul";
+$host = "127.0.0.1";
+$user = "root";
+$password = "";
 $dbname = "wikipedia-paragraphs-fetcher";
 
 $conn = mysqli_connect($host, $user, $password, $dbname);
