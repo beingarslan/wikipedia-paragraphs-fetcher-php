@@ -168,12 +168,12 @@ try {
             $i = 0;
             foreach ($image_paths as $image) {
                 if (isset($images_caption[$i])) {
-                    $cap = $images_caption[$i];
+                    $cap = urldecode($images_caption[$i]);
                 } else {
                     $cap = '';
                 }
-                
-                $sql = "INSERT INTO article_images (article_id, image_url, caption) VALUES ('$article_id', '$image', '$cap')";
+                $image = urldecode($image);
+                $sql = "INSERT INTO article_images (article_id, image_url) VALUES ('$article_id', '$image')";
                 if (mysqli_query($conn, $sql)) {
                     $flag = true;
                     $i++;
