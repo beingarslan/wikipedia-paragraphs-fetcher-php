@@ -75,7 +75,7 @@
                                 var html = '';
                                 for (var i = 0; i < images.length; i++) {
                                     // image with download option
-                                    html += '<a href="' + images[i] + '" download target="_blank"><img src="' + images[i] + '" class="img-fluid" style="width: 200px; height: 200px;"></a>';
+                                    html += '<a href="' + images[i] + '" download target="_blank"><img src="' + images[i] + '" class="img-fluid mr-2" style="width: 200px; height: 200px;"></a>';
                                 }
                                 $('#images').html(html);
                                 // enable submit button
