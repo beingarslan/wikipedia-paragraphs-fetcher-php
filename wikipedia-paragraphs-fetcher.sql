@@ -35,7 +35,6 @@ CREATE TABLE `articles` (
   `title` varchar(255) NOT NULL,
   `paragraph` text NOT NULL,
   `url` varchar(255) NOT NULL,
-  `images` text,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
