@@ -70,15 +70,16 @@ function get_language_code($url) {
 try {
 
     $url = $_POST['url'];
+    $url = urldecode($url);
     $sql = "SELECT * FROM articles WHERE url='$url'";
     $result = mysqli_query($conn, $sql);
 
-    // if (mysqli_num_rows($result) > 0) {
-    //     // The article is already in the database, so display a message
-    //     $response = array("error" => "This article is already in the database.", "response" => false);
-    //     echo json_encode($response);
-    //     exit;
-    // }
+    if (mysqli_num_rows($result) > 0) {
+        // The article is already in the database, so display a message
+        $response = array("error" => "This article is already in the database.", "response" => false);
+        echo json_encode($response);
+        exit;
+    }
 
     // Fetch the first paragraph of the article and the title using the Wikipedia API
     $page_name = substr($url, strrpos($url, '/') + 1);
@@ -97,7 +98,6 @@ try {
 
     $title = $json['title'];
     $paragraph = $json['extract'];
-    
     // Download the images and get their paths and captions (titles)
     $images = array();
     $images_title = array();
@@ -108,14 +108,20 @@ try {
                 if ($i++ >= 3) {
                     break;
                 }
-                $images_title[] = $item['title'];
-                $image_url = 'https:' . $item['srcset'][0]['src'];
-                $images[] = $image_url;
+                
+                if (isset($item['srcset'])) {
+                    if (isset($item['title']))
+                        $images_title[] = $item['title'];
+                    $image_url = 'https:' . $item['srcset'][0]['src'];
+                    $images[] = $image_url;
+                } else{
+                    $i -= 1;
+                }
             }
         }
     }
 
-    // converting titles into captions
+    // converting title into caption without special chars
     $images_caption = array();
     foreach($images_title as $item) {
         $ext = pathinfo($item, PATHINFO_EXTENSION);
@@ -129,6 +135,7 @@ try {
         }
         $images_caption[] = $str;
     }
+    
     
     // Escape the values for insertion into the database
     $title = mysqli_real_escape_string($conn, $title);
@@ -160,7 +167,13 @@ try {
             $flag = false;
             $i = 0;
             foreach ($image_paths as $image) {
-                $sql = "INSERT INTO article_images (article_id, image_url, caption) VALUES ('$article_id', '$image', '$images_caption[$i]')";
+                if (isset($images_caption[$i])) {
+                    $cap = $images_caption[$i];
+                } else {
+                    $cap = '';
+                }
+                
+                $sql = "INSERT INTO article_images (article_id, image_url, caption) VALUES ('$article_id', '$image', '$cap')";
                 if (mysqli_query($conn, $sql)) {
                     $flag = true;
                     $i++;
