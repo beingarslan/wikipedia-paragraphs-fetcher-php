@@ -52,23 +52,40 @@ function url_get_contents($url, $useragent='cURL', $headers=false, $follow_redir
     return $result;
 }
 
+function get_language_code($url) {
+    $languageCode = '';
+    $flag = false;
+    for ($i = 0; $url[$i] != '.'; $i++) {
+        if($url[$i] == '/') {
+            $i += 2;
+            $flag = true;
+        }
+        if($flag)
+            $languageCode .= $url[$i];
+    }
+    return $languageCode;
+}
+
+
 try {
 
     $url = $_POST['url'];
     $sql = "SELECT * FROM articles WHERE url='$url'";
     $result = mysqli_query($conn, $sql);
 
-    if (mysqli_num_rows($result) > 0) {
-        // The article is already in the database, so display a message
-        $response = array("error" => "This article is already in the database.", "response" => false);
-        echo json_encode($response);
-        exit;
-    }
+    // if (mysqli_num_rows($result) > 0) {
+    //     // The article is already in the database, so display a message
+    //     $response = array("error" => "This article is already in the database.", "response" => false);
+    //     echo json_encode($response);
+    //     exit;
+    // }
 
     // Fetch the first paragraph of the article and the title using the Wikipedia API
     $page_name = substr($url, strrpos($url, '/') + 1);
-    // extractLanguageCode form url
-    $languageCode = substr($url, 8, 2);
+    
+    // getting the language code of the article from the url
+    $languageCode = get_language_code($url);
+
     // get page content
     $api_url_media = "https://$languageCode.wikipedia.org/api/rest_v1/page/media-list/$page_name";
     $api_url = "https://$languageCode.wikipedia.org/api/rest_v1/page/summary/$page_name";
@@ -81,8 +98,9 @@ try {
     $title = $json['title'];
     $paragraph = $json['extract'];
     
-    // Download the images and get their paths
+    // Download the images and get their paths and captions (titles)
     $images = array();
+    $images_title = array();
     if (is_array($json_media['items'])) {
         $i = 0;
         foreach ($json_media['items'] as $item) {
@@ -90,12 +108,28 @@ try {
                 if ($i++ >= 3) {
                     break;
                 }
+                $images_title[] = $item['title'];
                 $image_url = 'https:' . $item['srcset'][0]['src'];
                 $images[] = $image_url;
             }
         }
     }
 
+    // converting titles into captions
+    $images_caption = array();
+    foreach($images_title as $item) {
+        $ext = pathinfo($item, PATHINFO_EXTENSION);
+        $str = substr($item, 5, strlen($item) - strlen($ext) - 6);
+        for ($i = 0; $i < strlen($str); $i++) {
+            if ($str[$i] == "'") {
+                for ($j = $i + 1; $j < strlen($str) - 1; $j++, $i++) {
+                    $str[$i] = $str[$j];
+                }
+            }
+        }
+        $images_caption[] = $str;
+    }
+    
     // Escape the values for insertion into the database
     $title = mysqli_real_escape_string($conn, $title);
     $paragraph = mysqli_real_escape_string($conn, $paragraph);
@@ -124,20 +158,21 @@ try {
         if (mysqli_query($conn, $sql)) {
             $article_id = $conn->insert_id;
             $flag = false;
+            $i = 0;
             foreach ($image_paths as $image) {
-                $sql = "INSERT INTO article_images (article_id, image_url) VALUES ('$article_id', '$image')";
+                $sql = "INSERT INTO article_images (article_id, image_url, caption) VALUES ('$article_id', '$image', '$images_caption[$i]')";
                 if (mysqli_query($conn, $sql)) {
                     $flag = true;
+                    $i++;
                     continue;
                 } else {
                     $flag = false;
                     $response = array("error" => "Error: " . $sql . "<br>" . mysqli_error($conn), "response" => false);
                     echo json_encode($response);
+                    break;
                 }
             }
         }
-
-        
     }
 
     if ($flag) {
@@ -146,7 +181,7 @@ try {
             "title" => strip_tags($title),
             "paragraph" => strip_tags($paragraph),
             "url" => $url,
-            "images" => $images,
+            "images" => $image_paths,
             "response" => true
         );
         echo json_encode($response);
