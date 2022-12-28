@@ -23,7 +23,6 @@ CREATE TABLE `article_images` (
   `id` int NOT NULL AUTO_INCREMENT,
   `article_id` int NOT NULL,
   `image_url` text NOT NULL,
-  `caption` text,
   PRIMARY KEY (`id`),
   KEY `article_id` (`article_id`),
   CONSTRAINT `article_images_ibfk_1` FOREIGN KEY (`article_id`) REFERENCES `articles` (`id`)

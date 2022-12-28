@@ -100,7 +100,6 @@ try {
     $paragraph = $json['extract'];
     // Download the images and get their paths and captions (titles)
     $images = array();
-    $images_title = array();
     if (is_array($json_media['items'])) {
         $i = 0;
         foreach ($json_media['items'] as $item) {
@@ -110,8 +109,6 @@ try {
                 }
                 
                 if (isset($item['srcset'])) {
-                    if (isset($item['title']))
-                        $images_title[] = $item['title'];
                     $image_url = 'https:' . $item['srcset'][0]['src'];
                     $images[] = $image_url;
                 } else{
@@ -120,28 +117,11 @@ try {
             }
         }
     }
-
-    // converting title into caption without special chars
-    $images_caption = array();
-    foreach($images_title as $item) {
-        $ext = pathinfo($item, PATHINFO_EXTENSION);
-        $str = substr($item, 5, strlen($item) - strlen($ext) - 6);
-        for ($i = 0; $i < strlen($str); $i++) {
-            if ($str[$i] == "'") {
-                for ($j = $i + 1; $j < strlen($str) - 1; $j++, $i++) {
-                    $str[$i] = $str[$j];
-                }
-            }
-        }
-        $images_caption[] = $str;
-    }
-    
     
     // Escape the values for insertion into the database
     $title = mysqli_real_escape_string($conn, $title);
     $paragraph = mysqli_real_escape_string($conn, $paragraph);
     $url = mysqli_real_escape_string($conn, $url);
-    // $images_store = mysqli_real_escape_string($conn, implode(",", $images));
 
     // variable for the path of the images folder must end with '/'
     $path = "images/";
@@ -167,12 +147,6 @@ try {
             $flag = false;
             $i = 0;
             foreach ($image_paths as $image) {
-                if (isset($images_caption[$i])) {
-                    $cap = urldecode($images_caption[$i]);
-                } else {
-                    $cap = '';
-                }
-                $image = urldecode($image);
                 $sql = "INSERT INTO article_images (article_id, image_url) VALUES ('$article_id', '$image')";
                 if (mysqli_query($conn, $sql)) {
                     $flag = true;
